@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Namensrad</title>
   <style>
     body {
@@ -12,26 +12,40 @@
       justify-content: center;
       height: 100vh;
       font-family: sans-serif;
-      background: #f4f4f4;
+      background: #f4f4f8;
+      position: relative;
+      margin: 0;
     }
     canvas {
       border: 5px solid #333;
       border-radius: 50%;
+      background: white;
     }
     #spinButton {
       margin-top: 20px;
       padding: 10px 20px;
       font-size: 20px;
       cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #6b5bde;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    #spinButton:hover {
+      background-color: #5848c2;
     }
     #pointer {
       position: absolute;
+      top: 50%;
+      right: calc(50% - 250px); /* 50% vom Bildschirm minus Radius (250px) */
+      transform: translateY(-50%);
       width: 0;
       height: 0;
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-bottom: 30px solid red;
-      top: 60px;
+      border-top: 20px solid transparent;
+      border-bottom: 20px solid transparent;
+      border-left: 30px solid red;
+      z-index: 10;
     }
   </style>
 </head>
@@ -42,7 +56,7 @@
 <button id="spinButton">Drehen!</button>
 
 <script>
-  const names = ["Anna", "Ben", "Clara", "David", "Ella", "Finn", "Greta", "Hugo"];
+  const names = ["Florian", "Sophie", "Constantin", "Gina", "Thomas", "Hanna", "Justin", "Esther", "Lara", "Tom"];
   const canvas = document.getElementById("wheel");
   const ctx = canvas.getContext("2d");
   const size = canvas.width;
@@ -54,21 +68,27 @@
   function drawWheel() {
     const anglePerSegment = (2 * Math.PI) / names.length;
     ctx.clearRect(0, 0, size, size);
+
     for (let i = 0; i < names.length; i++) {
       const startAngle = i * anglePerSegment + rotation;
       const endAngle = startAngle + anglePerSegment;
+
       ctx.beginPath();
       ctx.moveTo(radius, radius);
       ctx.arc(radius, radius, radius, startAngle, endAngle);
-      ctx.fillStyle = i % 2 === 0 ? "#ffcc00" : "#ff9900";
+
+      // Blau-Lila Farbpalette abwechselnd
+      ctx.fillStyle = i % 2 === 0 ? "#6b5bde" : "#8a79e0";
       ctx.fill();
+
+      // Namen zeichnen
       ctx.save();
       ctx.translate(radius, radius);
       ctx.rotate(startAngle + anglePerSegment / 2);
       ctx.textAlign = "right";
-      ctx.fillStyle = "#000";
-      ctx.font = "20px Arial";
-      ctx.fillText(names[i], radius - 10, 10);
+      ctx.fillStyle = "white";
+      ctx.font = "bold 18px Arial";
+      ctx.fillText(names[i], radius - 20, 8);
       ctx.restore();
     }
   }
@@ -76,8 +96,9 @@
   function spinWheel() {
     if (isSpinning) return;
     isSpinning = true;
-    let spinAngle = Math.random() * 360 + 720; // mindestens 2 Runden
-    const duration = 4000; // ms
+
+    let spinAngle = Math.random() * 360 + 720; // mindestens 2 volle Umdrehungen
+    const duration = 4000; // Dauer in ms
     const start = performance.now();
 
     function animate(now) {
@@ -90,10 +111,17 @@
         requestAnimationFrame(animate);
       } else {
         isSpinning = false;
-        // Gewinner bestimmen
+        // Gewinner berechnen, bezogen auf 3-Uhr-Pfeil
+        // Pfeil zeigt auf 0 Grad, also Rotation muss umgekehrt betrachtet werden
         const anglePerSegment = (2 * Math.PI) / names.length;
-        const index = names.length - Math.floor(((rotation % (2 * Math.PI)) / anglePerSegment)) - 1;
-        alert("Gewinner: " + names[index >= 0 ? index : names.length + index]);
+        // rotation % (2*PI) gibt den aktuellen Winkel des Rads
+        // Wir bestimmen den Index des Segments, das beim Pfeil (3 Uhr) landet
+        let normalizedRotation = rotation % (2 * Math.PI);
+        if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
+
+        // Da Pfeil auf 0 (3 Uhr) zeigt, der Winkel entspricht direkt dem Segmentstart
+        let index = Math.floor(names.length - (normalizedRotation / anglePerSegment)) % names.length;
+        alert("Gewinner: " + names[index]);
       }
     }
 
