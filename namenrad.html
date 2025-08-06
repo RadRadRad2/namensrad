@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Namensrad</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: sans-serif;
+      background: #f4f4f4;
+    }
+    canvas {
+      border: 5px solid #333;
+      border-radius: 50%;
+    }
+    #spinButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    #pointer {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid red;
+      top: 60px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="pointer"></div>
+<canvas id="wheel" width="500" height="500"></canvas>
+<button id="spinButton">Drehen!</button>
+
+<script>
+  const names = ["Anna", "Ben", "Clara", "David", "Ella", "Finn", "Greta", "Hugo"];
+  const canvas = document.getElementById("wheel");
+  const ctx = canvas.getContext("2d");
+  const size = canvas.width;
+  const radius = size / 2;
+  const spinButton = document.getElementById("spinButton");
+  let rotation = 0;
+  let isSpinning = false;
+
+  function drawWheel() {
+    const anglePerSegment = (2 * Math.PI) / names.length;
+    ctx.clearRect(0, 0, size, size);
+    for (let i = 0; i < names.length; i++) {
+      const startAngle = i * anglePerSegment + rotation;
+      const endAngle = startAngle + anglePerSegment;
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, startAngle, endAngle);
+      ctx.fillStyle = i % 2 === 0 ? "#ffcc00" : "#ff9900";
+      ctx.fill();
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(startAngle + anglePerSegment / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#000";
+      ctx.font = "20px Arial";
+      ctx.fillText(names[i], radius - 10, 10);
+      ctx.restore();
+    }
+  }
+
+  function spinWheel() {
+    if (isSpinning) return;
+    isSpinning = true;
+    let spinAngle = Math.random() * 360 + 720; // mindestens 2 Runden
+    const duration = 4000; // ms
+    const start = performance.now();
+
+    function animate(now) {
+      let elapsed = now - start;
+      if (elapsed > duration) elapsed = duration;
+      const easeOut = 1 - Math.pow(1 - elapsed / duration, 3);
+      rotation = (spinAngle * easeOut * Math.PI) / 180;
+      drawWheel();
+      if (elapsed < duration) {
+        requestAnimationFrame(animate);
+      } else {
+        isSpinning = false;
+        // Gewinner bestimmen
+        const anglePerSegment = (2 * Math.PI) / names.length;
+        const index = names.length - Math.floor(((rotation % (2 * Math.PI)) / anglePerSegment)) - 1;
+        alert("Gewinner: " + names[index >= 0 ? index : names.length + index]);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  drawWheel();
+  spinButton.addEventListener("click", spinWheel);
+</script>
+
+</body>
+</html>
