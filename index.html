@@ -3,134 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Namensrad</title>
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: sans-serif;
-      background: #f4f4f8;
-      position: relative;
-      margin: 0;
-    }
-    canvas {
-      border: 5px solid #333;
-      border-radius: 50%;
-      background: white;
-    }
-    #spinButton {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 20px;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      background-color: #6b5bde;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-    #spinButton:hover {
-      background-color: #5848c2;
-    }
-    #pointer {
-      position: absolute;
-      top: 50%;
-      right: calc(50% - 250px); /* 50% vom Bildschirm minus Radius (250px) */
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-top: 20px solid transparent;
-      border-bottom: 20px solid transparent;
-      border-left: 30px solid red;
-      z-index: 10;
-    }
-  </style>
+  <title>Jeopardy Spiel</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <h1>Jeopardy Spiel</h1>
 
-<div id="pointer"></div>
-<canvas id="wheel" width="500" height="500"></canvas>
-<button id="spinButton">Drehen!</button>
+  <div id="teams">
+    <h2>Teams & Punkte</h2>
+    <div class="team" data-team="0">
+      <span>Team 1:</span>
+      <button class="minus">-</button>
+      <span class="score">0</span>
+      <button class="plus">+</button>
+    </div>
+    <div class="team" data-team="1">
+      <span>Team 2:</span>
+      <button class="minus">-</button>
+      <span class="score">0</span>
+      <button class="plus">+</button>
+    </div>
+    <div class="team" data-team="2">
+      <span>Team 3:</span>
+      <button class="minus">-</button>
+      <span class="score">0</span>
+      <button class="plus">+</button>
+    </div>
+  </div>
 
-<script>
-  const names = ["Florian", "Sophie", "Constantin", "Gina", "Thomas", "Hanna", "Justin", "Esther", "Lara", "Tom"];
-  const canvas = document.getElementById("wheel");
-  const ctx = canvas.getContext("2d");
-  const size = canvas.width;
-  const radius = size / 2;
-  const spinButton = document.getElementById("spinButton");
-  let rotation = 0;
-  let isSpinning = false;
+  <h2>Fragen</h2>
+  <table id="questionsTable" border="1">
+    <thead>
+      <tr>
+        <th>Kategorie</th>
+        <th>100</th>
+        <th>200</th>
+        <th>300</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Wissen</td>
+        <td><button class="question" data-question="0-100">Frage 1</button></td>
+        <td><button class="question" data-question="0-200">Frage 2</button></td>
+        <td><button class="question" data-question="0-300">Frage 3</button></td>
+      </tr>
+      <tr>
+        <td>Kunst</td>
+        <td><button class="question" data-question="1-100">Frage 4</button></td>
+        <td><button class="question" data-question="1-200">Frage 5</button></td>
+        <td><button class="question" data-question="1-300">Frage 6</button></td>
+      </tr>
+      <tr>
+        <td>Sport</td>
+        <td><button class="question" data-question="2-100">Frage 7</button></td>
+        <td><button class="question" data-question="2-200">Frage 8</button></td>
+        <td><button class="question" data-question="2-300">Frage 9</button></td>
+      </tr>
+    </tbody>
+  </table>
 
-  function drawWheel() {
-    const anglePerSegment = (2 * Math.PI) / names.length;
-    ctx.clearRect(0, 0, size, size);
+  <button id="openRad">Rad für nächste Frage</button>
 
-    for (let i = 0; i < names.length; i++) {
-      const startAngle = i * anglePerSegment + rotation;
-      const endAngle = startAngle + anglePerSegment;
-
-      ctx.beginPath();
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius, startAngle, endAngle);
-
-      // Blau-Lila Farbpalette abwechselnd
-      ctx.fillStyle = i % 2 === 0 ? "#6b5bde" : "#8a79e0";
-      ctx.fill();
-
-      // Namen zeichnen
-      ctx.save();
-      ctx.translate(radius, radius);
-      ctx.rotate(startAngle + anglePerSegment / 2);
-      ctx.textAlign = "right";
-      ctx.fillStyle = "white";
-      ctx.font = "bold 18px Arial";
-      ctx.fillText(names[i], radius - 20, 8);
-      ctx.restore();
-    }
-  }
-
-  function spinWheel() {
-    if (isSpinning) return;
-    isSpinning = true;
-
-    let spinAngle = Math.random() * 360 + 720; // mindestens 2 volle Umdrehungen
-    const duration = 4000; // Dauer in ms
-    const start = performance.now();
-
-    function animate(now) {
-      let elapsed = now - start;
-      if (elapsed > duration) elapsed = duration;
-      const easeOut = 1 - Math.pow(1 - elapsed / duration, 3);
-      rotation = (spinAngle * easeOut * Math.PI) / 180;
-      drawWheel();
-      if (elapsed < duration) {
-        requestAnimationFrame(animate);
-      } else {
-        isSpinning = false;
-        // Gewinner berechnen, bezogen auf 3-Uhr-Pfeil
-        // Pfeil zeigt auf 0 Grad, also Rotation muss umgekehrt betrachtet werden
-        const anglePerSegment = (2 * Math.PI) / names.length;
-        // rotation % (2*PI) gibt den aktuellen Winkel des Rads
-        // Wir bestimmen den Index des Segments, das beim Pfeil (3 Uhr) landet
-        let normalizedRotation = rotation % (2 * Math.PI);
-        if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
-
-        // Da Pfeil auf 0 (3 Uhr) zeigt, der Winkel entspricht direkt dem Segmentstart
-        let index = Math.floor(names.length - (normalizedRotation / anglePerSegment)) % names.length;
-        alert("Gewinner: " + names[index]);
-      }
-    }
-
-    requestAnimationFrame(animate);
-  }
-
-  drawWheel();
-  spinButton.addEventListener("click", spinWheel);
-</script>
-
+  <script src="js/jeopardy.js"></script>
 </body>
 </html>
