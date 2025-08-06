@@ -1,0 +1,52 @@
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  background: #f4f4f8;
+  text-align: center;
+}
+
+#teams {
+  margin-bottom: 20px;
+}
+
+.team {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+.team button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#questionsTable {
+  margin: 0 auto 20px auto;
+  border-collapse: collapse;
+  width: 80%;
+}
+
+#questionsTable th,
+#questionsTable td {
+  padding: 10px;
+}
+
+.question {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#pointer {
+  position: absolute;
+  top: 50%;
+  right: calc(50% - 250px);
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 20px solid transparent;
+  border-left: 30px solid red;
+  z-index: 10;
+}
