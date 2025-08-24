@@ -3,229 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jeopardy + Namensrad</title>
+  <title>Namensrad</title>
   <style>
     body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
       font-family: sans-serif;
       background: #f4f4f8;
+      position: relative;
       margin: 0;
-      padding: 20px;
-      text-align: center;
     }
-
-    #teams {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-bottom: 20px;
+    canvas {
+      border: 5px solid #333;
+      border-radius: 50%;
+      background: white;
     }
-
-    .team {
-      border: 2px solid #444;
-      padding: 10px;
-      border-radius: 10px;
-      width: 120px;
-    }
-
-    .team.active {
-      background-color: #d0f0ff;
-    }
-
-    .score {
-      font-size: 24px;
-      display: block;
-      margin: 10px 0;
-    }
-
-    .team button {
-      margin: 5px;
-      padding: 5px 10px;
-    }
-
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border: 1px solid #aaa;
-      padding: 10px;
-      min-width: 100px;
-    }
-
-    .question-btn {
-      padding: 10px;
+    #spinButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 20px;
       cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #6b5bde;
+      color: white;
+      transition: background-color 0.3s ease;
     }
-
-    #radOverlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-      flex-direction: column;
+    #spinButton:hover {
+      background-color: #5848c2;
     }
-
     #pointer {
       position: absolute;
       top: 50%;
-      left: calc(50% + 250px);
+      right: calc(50% - 250px); /* 50% vom Bildschirm minus Radius (250px) */
       transform: translateY(-50%);
       width: 0;
       height: 0;
       border-top: 20px solid transparent;
       border-bottom: 20px solid transparent;
-      border-right: 30px solid red;
-      z-index: 20;
-    }
-
-    canvas {
-      border: 4px solid #333;
-      border-radius: 50%;
-    }
-
-    #spinButton {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-
-    #closeRad {
-      margin-top: 10px;
-      color: white;
-      cursor: pointer;
-      text-decoration: underline;
+      border-left: 30px solid red;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
 
-<h1>Jeopardy + Namensrad</h1>
-
-<div id="teams">
-  <div class="team active" data-team="0">
-    <div>Team 1</div>
-    <span class="score">0</span>
-    <button class="plus">+100</button>
-    <button class="minus">-100</button>
-  </div>
-  <div class="team" data-team="1">
-    <div>Team 2</div>
-    <span class="score">0</span>
-    <button class="plus">+100</button>
-    <button class="minus">-100</button>
-  </div>
-  <div class="team" data-team="2">
-    <div>Team 3</div>
-    <span class="score">0</span>
-    <button class="plus">+100</button>
-    <button class="minus">-100</button>
-  </div>
-</div>
-
-<table>
-  <thead>
-    <tr>
-      <th>100</th>
-      <th>200</th>
-      <th>300</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><button class="question-btn" data-value="100">Wissen</button></td>
-      <td><button class="question-btn" data-value="200">Wissen</button></td>
-      <td><button class="question-btn" data-value="300">Wissen</button></td>
-    </tr>
-    <tr>
-      <td><button class="question-btn" data-value="100">Kunst</button></td>
-      <td><button class="question-btn" data-value="200">Kunst</button></td>
-      <td><button class="question-btn" data-value="300">Kunst</button></td>
-    </tr>
-    <tr>
-      <td><button class="question-btn" data-value="100">Sport</button></td>
-      <td><button class="question-btn" data-value="200">Sport</button></td>
-      <td><button class="question-btn" data-value="300">Sport</button></td>
-    </tr>
-  </tbody>
-</table>
-
-<!-- RAD OVERLAY -->
-<div id="radOverlay">
-  <div id="pointer"></div>
-  <canvas id="wheel" width="500" height="500"></canvas>
-  <button id="spinButton">Drehen!</button>
-  <div id="closeRad">[ schließen ]</div>
-</div>
+<div id="pointer"></div>
+<canvas id="wheel" width="500" height="500"></canvas>
+<button id="spinButton">Drehen!</button>
 
 <script>
-  const teams = document.querySelectorAll(".team");
-  let activeTeam = 0;
-
-  // Punktvergabe manuell
-  teams.forEach((team, idx) => {
-    team.querySelector(".plus").onclick = () => changeScore(idx, +100);
-    team.querySelector(".minus").onclick = () => changeScore(idx, -100);
-  });
-
-  function changeScore(teamIndex, delta) {
-    const scoreEl = teams[teamIndex].querySelector(".score");
-    scoreEl.textContent = parseInt(scoreEl.textContent) + delta;
-  }
-
-  // Frage-Buttons
-  const questionButtons = document.querySelectorAll(".question-btn");
-  questionButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      btn.disabled = true;
-      const value = parseInt(btn.dataset.value);
-      showRad(value);
-    });
-  });
-
-  // Wechsel der aktiven Teams
-  function nextTeam() {
-    teams[activeTeam].classList.remove("active");
-    activeTeam = (activeTeam + 1) % teams.length;
-    teams[activeTeam].classList.add("active");
-  }
-
-  // NAMENSRAD
   const names = ["Florian", "Sophie", "Constantin", "Gina", "Thomas", "Hanna", "Justin", "Esther", "Lara", "Tom"];
   const canvas = document.getElementById("wheel");
   const ctx = canvas.getContext("2d");
-  const radOverlay = document.getElementById("radOverlay");
-  const pointer = document.getElementById("pointer");
-  const spinBtn = document.getElementById("spinButton");
-  const closeRad = document.getElementById("closeRad");
+  const size = canvas.width;
+  const radius = size / 2;
+  const spinButton = document.getElementById("spinButton");
   let rotation = 0;
   let isSpinning = false;
-  let currentValue = 100;
 
   function drawWheel() {
     const anglePerSegment = (2 * Math.PI) / names.length;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, size, size);
+
     for (let i = 0; i < names.length; i++) {
       const startAngle = i * anglePerSegment + rotation;
       const endAngle = startAngle + anglePerSegment;
 
       ctx.beginPath();
-      ctx.moveTo(250, 250);
-      ctx.arc(250, 250, 250, startAngle, endAngle);
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, startAngle, endAngle);
+
+      // Blau-Lila Farbpalette abwechselnd
       ctx.fillStyle = i % 2 === 0 ? "#6b5bde" : "#8a79e0";
       ctx.fill();
 
+      // Namen zeichnen
       ctx.save();
-      ctx.translate(250, 250);
+      ctx.translate(radius, radius);
       ctx.rotate(startAngle + anglePerSegment / 2);
       ctx.textAlign = "right";
       ctx.fillStyle = "white";
-      ctx.font = "bold 16px Arial";
-      ctx.fillText(names[i], 230, 10);
+      ctx.font = "bold 18px Arial";
+      ctx.fillText(names[i], radius - 20, 8);
       ctx.restore();
     }
   }
@@ -233,8 +96,9 @@
   function spinWheel() {
     if (isSpinning) return;
     isSpinning = true;
-    const spinAngle = Math.random() * 360 + 720;
-    const duration = 4000;
+
+    let spinAngle = Math.random() * 360 + 720; // mindestens 2 volle Umdrehungen
+    const duration = 4000; // Dauer in ms
     const start = performance.now();
 
     function animate(now) {
@@ -247,41 +111,26 @@
         requestAnimationFrame(animate);
       } else {
         isSpinning = false;
+        // Gewinner berechnen, bezogen auf 3-Uhr-Pfeil
+        // Pfeil zeigt auf 0 Grad, also Rotation muss umgekehrt betrachtet werden
         const anglePerSegment = (2 * Math.PI) / names.length;
+        // rotation % (2*PI) gibt den aktuellen Winkel des Rads
+        // Wir bestimmen den Index des Segments, das beim Pfeil (3 Uhr) landet
         let normalizedRotation = rotation % (2 * Math.PI);
         if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
-        let index = Math.floor(names.length - (normalizedRotation / anglePerSegment)) % names.length;
-        const winner = names[index];
 
-        setTimeout(() => {
-          const correct = confirm(`Die Frage geht an: ${winner}\nHat das Team richtig geantwortet?`);
-          if (correct) {
-            changeScore(activeTeam, currentValue);
-          } else {
-            changeScore(activeTeam, -currentValue);
-          }
-          nextTeam();
-          radOverlay.style.display = "none";
-        }, 300);
+        // Da Pfeil auf 0 (3 Uhr) zeigt, der Winkel entspricht direkt dem Segmentstart
+        let index = Math.floor(names.length - (normalizedRotation / anglePerSegment)) % names.length;
+        alert("Gewinner: " + names[index]);
       }
     }
 
     requestAnimationFrame(animate);
   }
 
-  function showRad(value) {
-    currentValue = value;
-    drawWheel();
-    radOverlay.style.display = "flex";
-  }
-
-  spinBtn.addEventListener("click", spinWheel);
-  closeRad.addEventListener("click", () => {
-    if (!isSpinning) {
-      radOverlay.style.display = "none";
-      nextTeam();
-    }
-  });
+  drawWheel();
+  spinButton.addEventListener("click", spinWheel);
 </script>
+
 </body>
 </html>
